@@ -498,3 +498,6 @@ def main(): # função principal de navegação
                 gerar_lista()
             elif 6.5 <= x <= 10.5 and 1 <= y <= 2.2: # verifica se o clique foi feito dentro do botão 4
                 janela_realizar_compra()
+
+if __name__ == '__main__': # chama a função main
+    main()
