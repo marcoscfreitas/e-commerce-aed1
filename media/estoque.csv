@@ -4,8 +4,11 @@ ID,Nome,Valor,Quantidade
 4,Teclado,50.0,15
 5,Processador,300.0,3
 6,Cooler,280.0,20
-7,Roteador,30.0,25
-8,processador ryzen 5,600.0,2
-9,teste,12.0,1
-10,Processador Vetorial,120.76,3
-11,teste,120.0,1
+7,Roteador,30.0,200,peça,12.0,12
+8,teste,123.0,12
+11,peça 2,1.0,0
+12,peça 1,1.0,0
+13,teste,1.0,1
+14,testando,120.23,0
+15,teste final talvez,120.12,0
+16,chega,125.4,11
