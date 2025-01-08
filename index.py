@@ -41,8 +41,8 @@ def gerar_lista(): # função para gerar uma lista de itens em html para o usuá
     estoque = ler_estoque()
     file_path = 'generated_list/estoque.html'
     with open(file_path, mode='w') as arq:
-        arq.write('<html><head><title>Estoque</title>\n')
-        arq.write('''<style>
+        arq.write('''<html><head><title>Estoque</title>\n
+            <style>
             body {
                 font-family: Arial, sans-serif;
                 background-color: #f4f4f4;
@@ -77,10 +77,10 @@ def gerar_lista(): # função para gerar uma lista de itens em html para o usuá
                 font-size: 24px;
                 margin-bottom: 20px;
             }
-        </style>\n''')
-        arq.write('</head><body>\n')
-        arq.write('<h1>Estoque Atual</h1>\n')
-        arq.write('<table>\n<tr><th>ID</th><th>Nome</th><th>Valor</th><th>Quantidade</th></tr>\n')
+        </style>\n
+        </head><body>\n
+        <h1>Estoque Atual</h1>\n
+        <table>\n<tr><th>ID</th><th>Nome</th><th>Valor</th><th>Quantidade</th></tr>\n''')
 
         for item in estoque:
             arq.write(f'<tr><td>{item[0]}</td><td>{item[1]}</td><td>R${float(item[2]):.2f}</td><td>{item[3]}</td></tr>\n')
