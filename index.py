@@ -16,7 +16,7 @@ def ler_estoque():  # função para ler e retornar o estoque do arquivo csv
     return estoque
 
 def escrever_estoque(estoque): # função para escrever e atualizar dados no csv
-    with open('./media/estoque.csv', mode='w', newline='') as arq:
+    with open('./media/estoque.csv', mode='w', newline='') as arq: # newline para desabilitar quebra de linha ao manipular csv
         arq = csv.writer(arq) # writer para escrever no arquivo
         arq.writerow(['ID', 'Nome', 'Valor', 'Quantidade'])
         arq.writerows(estoque) # atualiza estoque quando chamada a função
@@ -105,24 +105,24 @@ def fechar_com_tecla(win): # função para fechar a janela ao pressionar Esc
 
 def janela_verificar_estoque():  # função para visualizar o estoque disponível
     estoque = ler_estoque()
-    itens_por_pagina = 10  # número de itens que cabem em uma página
-    pagina_atual = 0  # índice da página atual
-    filtro_estoque = estoque[:]  # lista filtrada, inicialmente igual ao estoque
-    total_paginas = (len(filtro_estoque) - 1) // itens_por_pagina + 1  # cálculo do total de páginas
+    itens_por_pagina = 10  # número maximo de itens na pagina
+    pagina_atual = 0  # índice da página atual e passado como "pagina" para a função desenhar_pagina
+    estoque_pesquisado = estoque[:]  # lista filtrada para pesquisa, inicialmente igual ao estoque completo
+    total_paginas = (len(estoque_pesquisado) - 1) // itens_por_pagina + 1  # cálculo do total de páginas para a paginação
 
-    def desenhar_pagina(win, pagina):
+    def desenhar_pagina(win, pagina): # função para atualizar a página com os itens do estoque após pesquisa
         win.delete('all')  # limpa a janela para redesenhar
 
         # design do título
         titulo = Text(Point(5, 9.5), 'Estoque Atual')
-        titulo.setSize(18)
+        titulo.setSize(20)
         titulo.setStyle('bold')
         titulo.draw(win)
 
-        # desenhando retângulos para células do cabeçalho
-        retangulo_id = Rectangle(Point(0, 8.2), Point(11, 9))  # ID
-        retangulo_id.setFill('lightblue')
-        retangulo_id.draw(win)
+        # desenhando retângulo para células do cabeçalho
+        retangulo_header = Rectangle(Point(0, 8.2), Point(11, 9))
+        retangulo_header.setFill('lightblue')
+        retangulo_header.draw(win)
 
         # texto para cabeçalho
         Text(Point(1, 8.6), 'ID').draw(win)
@@ -133,7 +133,7 @@ def janela_verificar_estoque():  # função para visualizar o estoque disponíve
         # desenhar itens da página
         inicio = pagina * itens_por_pagina
         fim = inicio + itens_por_pagina
-        itens_pagina = filtro_estoque[inicio:fim]
+        itens_pagina = estoque_pesquisado[inicio:fim]
 
         y = 7.8
         for item in itens_pagina:
@@ -143,7 +143,7 @@ def janela_verificar_estoque():  # função para visualizar o estoque disponíve
             Text(Point(8.5, y - 0.05), item[3]).draw(win)  # quantidade
             y -= 0.6
 
-        # desenhar botões de navegação
+        # desenhar setinhas para paginação
         if pagina > 0:
             botao_esquerda = Text(Point(1, 1.5), '<')
             botao_esquerda.setSize(32)
@@ -156,88 +156,86 @@ def janela_verificar_estoque():  # função para visualizar o estoque disponíve
             botao_direita.setStyle('bold')
             botao_direita.draw(win)
 
-        # Campo de pesquisa
+        # input para pesquisar string
         Text(Point(3.3, 1.5), 'Pesquisar:').draw(win)
-        entrada_pesquisa = Entry(Point(5, 1.5), 20)
-        entrada_pesquisa.draw(win)
+        input_pesquisa = Entry(Point(5, 1.5), 20)
+        input_pesquisa.draw(win)
 
-        # Botão de pesquisa
+        # botao para realizar a pesquisa
         botao_pesquisar = Rectangle(Point(6.2, 1.3), Point(6.7, 1.7))
         botao_pesquisar.setFill('yellow green')
         botao_pesquisar.draw(win)
         Text(botao_pesquisar.getCenter(), '🔎').draw(win)
 
-        return entrada_pesquisa
+        return input_pesquisa
 
     win = criar_janela('Verificar Estoque', 800, 600)
-    entrada_pesquisa = desenhar_pagina(win, pagina_atual)
+    input_pesquisa = desenhar_pagina(win, pagina_atual)
 
     while True:
-        click = win.checkMouse()  # Verifica se houve clique
-        key = win.checkKey()  # Verifica se uma tecla foi pressionada
+        click = win.checkMouse()
+        key = win.checkKey()
 
-        if key == 'Escape':  # Fecha a janela ao pressionar Escape
+        if key == 'Escape':  # fecha a janela ao pressionar esc
             win.close()
             return
 
-        if click:  # Se um clique ocorreu
+        if click:  # se um click ocorrer, obter coordenadas x e y
             x, y = click.getX(), click.getY()
 
-            # Botões de navegação
+            # se determinadas coordenadas forem clicadas, realizará navegação entre páginas
             if 0.5 <= x <= 1.5 and 1.2 <= y <= 1.8 and pagina_atual > 0:  # Área ajustada para a seta esquerda
                 pagina_atual -= 1
-                entrada_pesquisa = desenhar_pagina(win, pagina_atual)
+                input_pesquisa = desenhar_pagina(win, pagina_atual)
             elif 8.5 <= x <= 9.5 and 1.2 <= y <= 1.8 and pagina_atual < total_paginas - 1:  # Área ajustada para a seta direita
                 pagina_atual += 1
-                entrada_pesquisa = desenhar_pagina(win, pagina_atual)
+                input_pesquisa = desenhar_pagina(win, pagina_atual)
 
-            # Botão de pesquisa
+            # se clicar no botão de pesquisa, filtrar os itens com base no texto digitado
             elif 6.2 <= x <= 6.7 and 1.3 <= y <= 1.7:
-                texto_pesquisa = entrada_pesquisa.getText().strip().lower()  # Obter o texto digitado no campo de pesquisa
-                filtro_estoque = []  # Criar uma nova lista filtrada com itens que contenham o texto pesquisado
-                for item in estoque:
-                    if texto_pesquisa in item[1].lower():  # Verifica se o texto está no nome do item
-                        filtro_estoque.append(item)
-                pagina_atual = 0  # Reiniciar a página atual para a primeira página
+                texto_pesquisa = input_pesquisa.getText().strip().lower()  # pega o texto digitado no campo de pesquisa e remove espaços e transforma em minúsculo
+                estoque_pesquisado = []  # cria uma nova lista com os itens que contém o texto pesquisado
+                for item in estoque: # for para percorrer o estoque e encontrar o item com a string pesquisada
+                    if texto_pesquisa in item[1].lower():  # verifica se o texto está no nome do item
+                        estoque_pesquisado.append(item)
+                pagina_atual = 0  # reinicia a página para a primeira página
 
-                total_paginas = (len(filtro_estoque) - 1) // itens_por_pagina + 1  # Recalcular o número total de páginas com base no filtro
-                entrada_pesquisa = desenhar_pagina(win, pagina_atual)  # Redesenhar a página com o filtro aplicado
+                total_paginas = (len(estoque_pesquisado) - 1) // itens_por_pagina + 1  # recalcula o total de páginas com base no filtro
+                input_pesquisa = desenhar_pagina(win, pagina_atual)  # redesenha a página com o filtro
 
-
-
-def janela_cadastrar_peca(): # função para cadastrar uma nova peça
-    win = criar_janela('Cadastrar Peça', 400, 300)
+def janela_cadastrar_item(): # função para cadastrar um novo item
+    win = criar_janela('Cadastrar Item', 400, 300)
 
     # design do título
-    titulo = Text(Point(5, 9), 'Cadastrar Nova Peça')
-    titulo.setSize(18)
+    titulo = Text(Point(5, 9), 'Cadastrar Novo Item')
+    titulo.setSize(20)
     titulo.setStyle('bold')
     titulo.draw(win)
 
-    # campos para preenchimento da peça
+    # campos para preenchimento do item
     Text(Point(2.7, 7), 'Nome:').draw(win)
-    nome_entry = Entry(Point(5.7, 7), 19)
-    nome_entry.draw(win)
+    input_nome = Entry(Point(5.7, 7), 19)
+    input_nome.draw(win)
 
     Text(Point(2.7, 6), 'Valor:').draw(win)
-    valor_entry = Entry(Point(4.3, 6), 7)
-    valor_entry.draw(win)
+    input_valor = Entry(Point(4.3, 6), 7)
+    input_valor.draw(win)
 
     Text(Point(2.7, 5), 'Qtd.:').draw(win)
-    qtd_entry = Entry(Point(4.05, 5), 5)
-    qtd_entry.draw(win)
+    input_qtd = Entry(Point(4.05, 5), 5)
+    input_qtd.draw(win)
 
     # botão enviar
-    enviar_btn = Rectangle(Point(4, 1.7), Point(6, 2.7))
-    enviar_btn.setFill('yellow green')
-    enviar_btn.draw(win)
+    button_enviar = Rectangle(Point(4, 1.7), Point(6, 2.7))
+    button_enviar.setFill('yellow green')
+    button_enviar.draw(win)
     Text(Point(5, 2.2), 'Enviar').draw(win)
 
     # mensagem de erro
-    erro_text = Text(Point(5, 3.5), '') # inicialmente vazio e usado para exibir mensagens de erro
-    erro_text.setFill('red')
-    erro_text.setSize(12)
-    erro_text.draw(win)
+    texto_erro = Text(Point(5, 3.5), '') # inicialmente vazio e usado para exibir mensagens de erro
+    texto_erro.setFill('red')
+    texto_erro.setSize(12)
+    texto_erro.draw(win)
 
     while True:
         click = win.checkMouse()
@@ -248,59 +246,59 @@ def janela_cadastrar_peca(): # função para cadastrar uma nova peça
             return
 
         if click and 4 <= click.getX() <= 6 and 1.7 <= click.getY() <= 2.7:
-            nome = nome_entry.getText().strip()
-            valor_text = valor_entry.getText().strip()
-            qtd_text = qtd_entry.getText().strip()
+            nome = input_nome.getText().strip()
+            valor = input_valor.getText().strip()
+            qtd = input_qtd.getText().strip()
 
-            if not nome:
-                erro_text.setText('O nome não pode ser vazio!') # verifica se o campo nome está vazio
+            if nome == '':
+                texto_erro.setText('O nome não pode ser vazio!') # verifica se o campo nome está vazio
                 continue
 
             try:
-                valor = float(valor_text)
+                valor = float(valor)
                 if valor <= 0:
                     raise ValueError
             except ValueError:
-                erro_text.setText('Valor inválido! Use números positivos.') # verifica se o valor é um número positivo
+                texto_erro.setText('Valor inválido! Use números positivos.') # verifica se o valor é um número positivo
                 continue
 
             try:
-                quantidade = int(qtd_text)
+                quantidade = int(qtd)
                 if quantidade <= 0:
                     raise ValueError
             except ValueError:
-                erro_text.setText('Quantidade inválida! Use números inteiros.') # verifica se a quantidade é um número inteiro
+                texto_erro.setText('Quantidade inválida! Use números inteiros.') # verifica se a quantidade é um número inteiro
                 continue
 
-            # adiciona a peça ao estoque caso nao haja erros
+            # adiciona o item ao estoque caso nao haja erros
             adicionar_item(nome, valor, quantidade)
-            erro_text.setText('')  # limpa mensagem de erro antes de fechar a janela
+            texto_erro.setText('')  # limpa mensagem de erro antes de fechar a janela
             win.close()
 
             # exibe mensagem de sucesso
-            exibir_mensagem('Sucesso','Peça cadastrada com sucesso!')
+            exibir_mensagem('Sucesso','Item cadastrado com sucesso!')
             return
 
 def janela_realizar_compra():  # função para visualizar e realizar a compra de um item
     estoque = ler_estoque()
     itens_por_pagina = 10  # número de itens que cabem em uma página
     pagina_atual = 0  # índice da página atual
-    filtro_estoque = estoque[:]  # lista filtrada, inicialmente igual ao estoque
-    total_paginas = (len(filtro_estoque) - 1) // itens_por_pagina + 1  # cálculo do total de páginas
+    estoque_pesquisado = estoque[:]  # lista filtrada, inicialmente igual ao estoque
+    total_paginas = (len(estoque_pesquisado) - 1) // itens_por_pagina + 1  # cálculo do total de páginas
 
     def desenhar_pagina(win, pagina):
         win.delete('all')
 
         # design do título
-        titulo = Text(Point(5, 9.5), 'Itens Disponíveis para Compra')
-        titulo.setSize(18)
+        titulo = Text(Point(5, 9.5), 'Realizar Compra')
+        titulo.setSize(20)
         titulo.setStyle('bold')
         titulo.draw(win)
 
-        # desenhando retângulos para células do cabeçalho
-        retangulo_id = Rectangle(Point(0, 8.2), Point(11, 9))  # ID
-        retangulo_id.setFill('lightblue')
-        retangulo_id.draw(win)
+        # desenhando retângulo para células do cabeçalho
+        retangulo_header = Rectangle(Point(0, 8.2), Point(11, 9))
+        retangulo_header.setFill('lightblue')
+        retangulo_header.draw(win)
 
         # desenhando cabeçalho
         Text(Point(1, 8.6), 'ID').draw(win)
@@ -311,10 +309,10 @@ def janela_realizar_compra():  # função para visualizar e realizar a compra de
         # desenha os itens da página atual
         inicio = pagina * itens_por_pagina
         fim = inicio + itens_por_pagina
-        itens_pagina = filtro_estoque[inicio:fim]
+        itens_pagina = estoque_pesquisado[inicio:fim]
 
         y = 7.8
-        buttons = []
+        botoes_compra = []
         for item in itens_pagina:
             Text(Point(1, y - 0.05), item[0]).draw(win)  # id
             Text(Point(2.5, y - 0.05), item[1]).draw(win)  # nome
@@ -322,11 +320,12 @@ def janela_realizar_compra():  # função para visualizar e realizar a compra de
             Text(Point(6.8, y - 0.05), item[3]).draw(win)  # quantidade
 
             # botão de compra
-            btn_comprar = Rectangle(Point(8.2, y - 0.25), Point(9.3, y + 0.25))
-            btn_comprar.setFill('yellow green')
-            btn_comprar.draw(win)
+            botao_comprar = Rectangle(Point(8.2, y - 0.25), Point(9.3, y + 0.25))
+            botao_comprar.setFill('yellow green')
+            botao_comprar.draw(win)
             Text(Point(8.75, y), 'Comprar').draw(win)
-            buttons.append([btn_comprar, item[0]])  # Atualiza o botão com o ID correto do item atual
+            botoes_compra.append([botao_comprar, item[0]])  # adiciona o botão e o id do item à lista de botões
+            #print(botoes_compra)
             y -= 0.6
 
         # desenhar botões de navegação
@@ -344,8 +343,8 @@ def janela_realizar_compra():  # função para visualizar e realizar a compra de
 
         # Campo de pesquisa
         Text(Point(3.3, 1.5), 'Pesquisar:').draw(win)
-        entrada_pesquisa = Entry(Point(5, 1.5), 20)
-        entrada_pesquisa.draw(win)
+        input_pesquisa = Entry(Point(5, 1.5), 20)
+        input_pesquisa.draw(win)
 
         # Botão de pesquisa
         botao_pesquisar = Rectangle(Point(6.2, 1.3), Point(6.7, 1.7))
@@ -353,10 +352,12 @@ def janela_realizar_compra():  # função para visualizar e realizar a compra de
         botao_pesquisar.draw(win)
         Text(botao_pesquisar.getCenter(), '🔎').draw(win)
 
-        return buttons, entrada_pesquisa
+        return botoes_compra, input_pesquisa
 
     win = criar_janela('Realizar Compra', 800, 600)
-    buttons, entrada_pesquisa = desenhar_pagina(win, pagina_atual)
+    retorno = desenhar_pagina(win, pagina_atual) # atribui os botões de compra e o campo de pesquisa à variável botoes_compra e input_pesquisa
+    botoes_compra = retorno[0]
+    input_pesquisa = retorno[1]
 
     while True:
         click = win.checkMouse()
@@ -365,33 +366,40 @@ def janela_realizar_compra():  # função para visualizar e realizar a compra de
             win.close()
             return
 
-        if click:  # Se um clique ocorreu
+        if click:
             x, y = click.getX(), click.getY()
 
-            # Botões de navegação
+            # caso clique nas setas de navegação atualiza a página atual e redesenha a página
             if 0.5 <= x <= 1.5 and 1.2 <= y <= 1.8 and pagina_atual > 0:  # Área ajustada para a seta esquerda
                 pagina_atual -= 1
-                buttons, entrada_pesquisa = desenhar_pagina(win, pagina_atual)
+                retorno = desenhar_pagina(win, pagina_atual)
+                botoes_compra = retorno[0]
+                input_pesquisa = retorno[1]
             elif 8.5 <= x <= 9.5 and 1.2 <= y <= 1.8 and pagina_atual < total_paginas - 1:  # Área ajustada para a seta direita
                 pagina_atual += 1
-                buttons, entrada_pesquisa = desenhar_pagina(win, pagina_atual)
+                retorno = desenhar_pagina(win, pagina_atual)
+                botoes_compra = retorno[0]
+                input_pesquisa = retorno[1]
 
-            # Botão de pesquisa
+            # caso clique no botão de pesquisa, filtra os itens com base no texto digitado
             elif 6.2 <= x <= 6.7 and 1.3 <= y <= 1.7:
-                texto_pesquisa = entrada_pesquisa.getText().strip().lower()  # Obter o texto digitado no campo de pesquisa
-                filtro_estoque = []  # Criar uma nova lista filtrada com itens que contenham o texto pesquisado
+                texto_pesquisa = input_pesquisa.getText().strip().lower()
+                estoque_pesquisado = []
                 for item in estoque:
-                    if texto_pesquisa in item[1].lower():  # Verifica se o texto está no nome do item
-                        filtro_estoque.append(item)
-                pagina_atual = 0  # Reiniciar a página atual para a primeira página
+                    if texto_pesquisa in item[1].lower():
+                        estoque_pesquisado.append(item)
+                pagina_atual = 0
 
-                total_paginas = (len(filtro_estoque) - 1) // itens_por_pagina + 1  # Recalcular o número total de páginas com base no filtro
-                buttons, entrada_pesquisa = desenhar_pagina(win, pagina_atual)
+                total_paginas = (len(estoque_pesquisado) - 1) // itens_por_pagina + 1
+                retorno = desenhar_pagina(win, pagina_atual)
+                botoes_compra = retorno[0]
+                input_pesquisa = retorno[1]
 
-            # Botão de compra
-            for button in buttons:
-                btn_comprar, item_id = button
-                if btn_comprar.getP1().getX() <= x <= btn_comprar.getP2().getX() and btn_comprar.getP1().getY() <= y <= btn_comprar.getP2().getY():
+            # caso clique no botão de compra, realiza a compra do item
+            for botao in botoes_compra:
+                botao_comprar = botao[0]
+                item_id = botao[1]
+                if botao_comprar.getP1().getX() <= x <= botao_comprar.getP2().getX() and botao_comprar.getP1().getY() <= y <= botao_comprar.getP2().getY():
                     win.close()
                     realizar_compra(item_id)
                     return
@@ -407,20 +415,20 @@ def realizar_compra(item_id):  # Função para realizar a compra de um item
 
     win = criar_janela('Quantidade', 400, 200)
     Text(Point(5, 7), f'Comprar {item[1]} (Qtd disponível: {item[3]})').draw(win)
-    qtd_entry = Entry(Point(5, 5), 10)
-    qtd_entry.draw(win)
+    input_qtd = Entry(Point(5, 5), 10)
+    input_qtd.draw(win)
 
     # botão finalizar
-    btn_finalizar = Rectangle(Point(4, 1.1), Point(6, 2.5))
-    btn_finalizar.setFill('yellow green')
-    btn_finalizar.draw(win)
+    botao_finalizar = Rectangle(Point(4, 1.1), Point(6, 2.5))
+    botao_finalizar.setFill('yellow green')
+    botao_finalizar.draw(win)
     Text(Point(5, 1.8), 'Finalizar').draw(win)
 
     # mensagem para exibir erros, inicialmente vazia
-    erro_text = Text(Point(5, 3.5), '')
-    erro_text.setFill('red')
-    erro_text.setSize(12)
-    erro_text.draw(win)
+    texto_erro = Text(Point(5, 3.5), '')
+    texto_erro.setFill('red')
+    texto_erro.setSize(12)
+    texto_erro.draw(win)
 
     while True:
         click = win.checkMouse()
@@ -431,24 +439,24 @@ def realizar_compra(item_id):  # Função para realizar a compra de um item
 
         # verificação de clique no botão 'finalizar'
         if click and 4 <= click.getX() <= 6 and 1.1 <= click.getY() <= 2.5:
-            quantidade_text = qtd_entry.getText().strip()
+            quantidade_input = input_qtd.getText().strip()
 
             # verificação se o campo está vazio ou contém uma quantidade inválida
-            if not quantidade_text:
-                erro_text.setText('O campo de quantidade não pode estar vazio!') # verifica se o campo de quantidade está vazio
+            if not quantidade_input:
+                texto_erro.setText('O campo de quantidade não pode estar vazio!') # verifica se o campo de quantidade está vazio
                 continue
 
             try:
-                quantidade = int(quantidade_text)
+                quantidade = int(quantidade_input)
                 if quantidade <= 0:
-                    erro_text.setText('A quantidade deve ser maior que zero!') # verifica se a quantidade é maior que zero
+                    texto_erro.setText('A quantidade deve ser maior que zero!') # verifica se a quantidade é maior que zero
                     continue
             except ValueError:
-                erro_text.setText('A quantidade deve ser um número inteiro válido!') # verifica se a quantidade é um número inteiro
+                texto_erro.setText('A quantidade deve ser um número inteiro válido!') # verifica se a quantidade é um número inteiro
                 continue
 
             if quantidade > int(item[3]):
-                erro_text.setText('Quantidade insuficiente para a compra!') # verifica se a quantidade é maior que a disponível
+                texto_erro.setText('Quantidade insuficiente para a compra!') # verifica se a quantidade é maior que a disponível
                 continue
 
             # atualiza o estoque com a quantidade diminuída
@@ -461,7 +469,12 @@ def realizar_compra(item_id):  # Função para realizar a compra de um item
 
 def lista_pendencias():
     estoque = ler_estoque()
-    pendencias = [item for item in estoque if int(item[3]) == 0]
+    pendencias = []
+
+    for item in estoque:
+        if int(item[3]) == 0:
+            pendencias.append(item)
+
     itens_por_pagina = 10
     pagina_atual = 0
     total_paginas = (len(pendencias) - 1) // itens_por_pagina + 1
@@ -471,14 +484,14 @@ def lista_pendencias():
 
         # design do título
         titulo = Text(Point(5, 9.5), 'Itens Esgotados')
-        titulo.setSize(18)
+        titulo.setSize(20)
         titulo.setStyle('bold')
         titulo.draw(win)
 
-        # desenhando retângulos para células do cabeçalho
-        retangulo_id = Rectangle(Point(0, 8.2), Point(11, 9))  # ID
-        retangulo_id.setFill('lightblue')
-        retangulo_id.draw(win)
+        # desenhando retângulo para células do cabeçalho
+        retangulo_header = Rectangle(Point(0, 8.2), Point(11, 9))  # ID
+        retangulo_header.setFill('lightblue')
+        retangulo_header.draw(win)
 
         # cabeçalho
         Text(Point(1, 8.6), 'ID').draw(win)
@@ -491,8 +504,8 @@ def lista_pendencias():
         itens_pagina = pendencias[inicio:fim]
 
         y = 7.8
-        buttons_repor = []
-        buttons_excluir = []
+        botoes_repor = []
+        botoes_excluir = []
         for item in itens_pagina:
             Text(Point(1, y), item[0]).draw(win)
             Text(Point(2.5, y), item[1]).draw(win)
@@ -500,38 +513,40 @@ def lista_pendencias():
             Text(Point(6.8, y), item[3]).draw(win)
 
             # botão de "Repor"
-            btn_repor = Rectangle(Point(8.1, y - 0.25), Point(8.7, y + 0.25))
-            btn_repor.setFill('yellow green')
-            btn_repor.draw(win)
+            botao_repor = Rectangle(Point(8.1, y - 0.25), Point(8.7, y + 0.25))
+            botao_repor.setFill('yellow green')
+            botao_repor.draw(win)
             Text(Point(8.4, y), 'Repor').draw(win)
-            buttons_repor.append([btn_repor, item[0]])
+            botoes_repor.append([botao_repor, item[0]])
 
             # botão de "Excluir"
-            btn_excluir = Rectangle(Point(8.8, y - 0.25), Point(9.4, y + 0.25))
-            btn_excluir.setFill('red')
-            btn_excluir.draw(win)
+            botao_excluir = Rectangle(Point(8.8, y - 0.25), Point(9.4, y + 0.25))
+            botao_excluir.setFill('red')
+            botao_excluir.draw(win)
             Text(Point(9.1, y), 'Excluir').draw(win)
-            buttons_excluir.append([btn_excluir, item[0]])
+            botoes_excluir.append([botao_excluir, item[0]])
 
             y -= 0.6
 
         # desenhar botões de navegação
-        #if pagina > 0:
+        if pagina > 0:
             botao_esquerda = Text(Point(1, 1.5), '<')
             botao_esquerda.setSize(32)
             botao_esquerda.setStyle('bold')
             botao_esquerda.draw(win)
 
-        #if pagina < total_paginas - 1:
+        if pagina < total_paginas - 1:
             botao_direita = Text(Point(9, 1.5), '>')
             botao_direita.setSize(32)
             botao_direita.setStyle('bold')
             botao_direita.draw(win)
 
-        return buttons_repor, buttons_excluir
+        return botoes_repor, botoes_excluir
 
     win = criar_janela('Lista de Pendências', 800, 600)
-    buttons_repor, buttons_excluir = desenhar_pagina(win, pagina_atual)
+    retorno = desenhar_pagina(win, pagina_atual)
+    botoes_repor = retorno[0]
+    botoes_excluir = retorno[1]
 
     while True:
         click = win.checkMouse()
@@ -544,29 +559,35 @@ def lista_pendencias():
         if click:
             x, y = click.getX(), click.getY()
 
-            # Botões de navegação
+            # caso clique nas setas de navegação atualiza a página atual e redesenha a página
             if 0.5 <= x <= 1.5 and 0.2 <= y <= 0.6 and pagina_atual > 0:
                 pagina_atual -= 1
-                buttons_repor, buttons_excluir = desenhar_pagina(win, pagina_atual)
+                retorno = desenhar_pagina(win, pagina_atual)
+                botoes_repor = retorno[0]
+                botoes_excluir = retorno[1]
             elif 8.5 <= x <= 9.5 and 0.2 <= y <= 0.6 and pagina_atual < total_paginas - 1:
                 pagina_atual += 1
-                buttons_repor, buttons_excluir = desenhar_pagina(win, pagina_atual)
+                retorno = desenhar_pagina(win, pagina_atual)
+                botoes_repor = retorno[0]
+                botoes_excluir = retorno[1]
 
-            # Botão de "Repor"
-            for btn_repor, item_id in buttons_repor:
-                if btn_repor.getP1().getX() <= x <= btn_repor.getP2().getX() and btn_repor.getP1().getY() <= y <= btn_repor.getP2().getY():
+            # atribui o id do item ao botão de repor e caso seja clicado, chama a função repor_item
+            for botao_repor in botoes_repor:
+                item_id = botao_repor[1]  # guarda o id do item correspondente ao botão de repor
+                if botao_repor[0].getP1().getX() <= x <= botao_repor[0].getP2().getX() and botao_repor[0].getP1().getY() <= y <= botao_repor[0].getP2().getY():
                     win.close()
                     repor_item(item_id)
                     return
 
-            # Botão de "Excluir"
-            for btn_excluir, item_id in buttons_excluir:
-                if btn_excluir.getP1().getX() <= x <= btn_excluir.getP2().getX() and btn_excluir.getP1().getY() <= y <= btn_excluir.getP2().getY():
+            # atribui o id do item ao botão de excluir e caso seja clicado, chama a função excluir_item
+            for botao_excluir in botoes_excluir:
+                item_id = botao_excluir[1]  # guarda o id do item correspondente ao botão de excluir
+                if botao_excluir[0].getP1().getX() <= x <= botao_excluir[0].getP2().getX() and botao_excluir[0].getP1().getY() <= y <= botao_excluir[0].getP2().getY():
                     win.close()
                     excluir_item(item_id)
                     return
 
-def repor_item(item_id):  # Função para repor a quantidade de um item
+def repor_item(item_id):  # função para repor a quantidade de um item
     estoque = ler_estoque()
 
     for i in estoque:  # for para percorrer o estoque e encontrar o item com o id correspondente
@@ -576,20 +597,20 @@ def repor_item(item_id):  # Função para repor a quantidade de um item
 
     win = criar_janela('Repor Quantidade', 400, 200)
     Text(Point(5, 7), f'Quantas unidades deseja repor de {item[1]}?').draw(win)
-    qtd_entry = Entry(Point(5, 5), 10)
-    qtd_entry.draw(win)
+    input_qtd = Entry(Point(5, 5), 10)
+    input_qtd.draw(win)
 
     # botão finalizar
-    btn_finalizar = Rectangle(Point(4, 1.1), Point(6, 2.5))
-    btn_finalizar.setFill('yellow green')
-    btn_finalizar.draw(win)
+    botao_finalizar = Rectangle(Point(4, 1.1), Point(6, 2.5))
+    botao_finalizar.setFill('yellow green')
+    botao_finalizar.draw(win)
     Text(Point(5, 1.8), 'Finalizar').draw(win)
 
     # mensagem para exibir erros, inicialmente vazia
-    erro_text = Text(Point(5, 3.5), '')
-    erro_text.setFill('red')
-    erro_text.setSize(12)
-    erro_text.draw(win)
+    texto_erro = Text(Point(5, 3.5), '')
+    texto_erro.setFill('red')
+    texto_erro.setSize(12)
+    texto_erro.draw(win)
 
     while True:
         click = win.checkMouse()
@@ -600,20 +621,20 @@ def repor_item(item_id):  # Função para repor a quantidade de um item
 
         # verificação de clique no botão 'finalizar'
         if click and 4 <= click.getX() <= 6 and 1.1 <= click.getY() <= 2.5:
-            quantidade_text = qtd_entry.getText().strip()
+            quantidade_input = input_qtd.getText().strip()
 
             # verificação se o campo está vazio ou contém uma quantidade inválida
-            if not quantidade_text:
-                erro_text.setText('O campo de quantidade não pode estar vazio!')  # verifica se o campo de quantidade está vazio
+            if not quantidade_input:
+                texto_erro.setText('O campo de quantidade não pode estar vazio!')  # verifica se o campo de quantidade está vazio
                 continue
 
             try:
-                quantidade = int(quantidade_text)
+                quantidade = int(quantidade_input)
                 if quantidade <= 0:
-                    erro_text.setText('A quantidade deve ser maior que zero!')  # verifica se a quantidade é maior que zero
+                    texto_erro.setText('A quantidade deve ser maior que zero!')  # verifica se a quantidade é maior que zero
                     continue
             except ValueError:
-                erro_text.setText('A quantidade deve ser um número inteiro válido!')  # verifica se a quantidade é um número inteiro
+                texto_erro.setText('A quantidade deve ser um número inteiro válido!')  # verifica se a quantidade é um número inteiro
                 continue
 
             # atualiza o estoque com a quantidade reposta
@@ -624,7 +645,7 @@ def repor_item(item_id):  # Função para repor a quantidade de um item
             exibir_mensagem('Sucesso', 'Quantidade reposta com sucesso!')  # abre nova janela com mensagem de sucesso
             return
 
-def excluir_item(item_id):  # Função para excluir um item do estoque
+def excluir_item(item_id):  # função para excluir um item do estoque
     estoque = ler_estoque()
 
     for i in estoque:  # for para percorrer o estoque e encontrar o item com o id correspondente
@@ -666,49 +687,49 @@ def main(): # função principal de navegação
     logo.draw(win)
 
     # botão verificar estoque
-    btn_verificar = Rectangle(Point(7.75, 8), Point(11.75, 9.2))
-    btn_verificar.setFill('grey')
-    btn_verificar.draw(win)
-    texto_verificar = Text(btn_verificar.getCenter(), 'Verificar Estoque')
+    botao_verificar = Rectangle(Point(7.75, 8), Point(11.75, 9.2))
+    botao_verificar.setFill('grey')
+    botao_verificar.draw(win)
+    texto_verificar = Text(botao_verificar.getCenter(), 'Verificar Estoque')
     texto_verificar.setSize(18)
     texto_verificar.setStyle('bold')
     texto_verificar.draw(win)
 
-    # botão cadastrar peça
-    btn_cadastrar = Rectangle(Point(7.75, 6.5), Point(11.75, 7.7))
-    btn_cadastrar.setFill('grey')
-    btn_cadastrar.draw(win)
-    texto_cadastrar = Text(btn_cadastrar.getCenter(), 'Cadastrar Peça')
+    # botão cadastrar item
+    botao_cadastrar = Rectangle(Point(7.75, 6.5), Point(11.75, 7.7))
+    botao_cadastrar.setFill('grey')
+    botao_cadastrar.draw(win)
+    texto_cadastrar = Text(botao_cadastrar.getCenter(), 'Cadastrar Item')
     texto_cadastrar.setSize(18)
     texto_cadastrar.setStyle('bold')
     texto_cadastrar.draw(win)
 
     # botão gerar lista
-    btn_gerar_lista = Rectangle(Point(7.75, 5), Point(11.75, 6.2))
-    btn_gerar_lista.setFill('grey')
-    btn_gerar_lista.draw(win)
-    texto_gerar_lista = Text(btn_gerar_lista.getCenter(), 'Gerar Lista')
-    texto_gerar_lista.setSize(18)
-    texto_gerar_lista.setStyle('bold')
-    texto_gerar_lista.draw(win)
+    botao_gerar = Rectangle(Point(7.75, 5), Point(11.75, 6.2))
+    botao_gerar.setFill('grey')
+    botao_gerar.draw(win)
+    texto_gerar = Text(botao_gerar.getCenter(), 'Gerar Lista')
+    texto_gerar.setSize(18)
+    texto_gerar.setStyle('bold')
+    texto_gerar.draw(win)
 
     # botão realizar compra
-    btn_comprar = Rectangle(Point(7.75, 3.5), Point(11.75, 4.7))
-    btn_comprar.setFill('grey')
-    btn_comprar.draw(win)
-    texto_comprar = Text(btn_comprar.getCenter(), 'Realizar Compra')
+    botao_comprar = Rectangle(Point(7.75, 3.5), Point(11.75, 4.7))
+    botao_comprar.setFill('grey')
+    botao_comprar.draw(win)
+    texto_comprar = Text(botao_comprar.getCenter(), 'Realizar Compra')
     texto_comprar.setSize(18)
     texto_comprar.setStyle('bold')
     texto_comprar.draw(win)
 
     # botao lista de pendencias
-    btn_buscar_estoque = Rectangle(Point(7.75, 2), Point(11.75, 3.2))
-    btn_buscar_estoque.setFill('grey')
-    btn_buscar_estoque.draw(win)
-    texto_buscar_estoque = Text(btn_buscar_estoque.getCenter(), 'Lista Pendencias')
-    texto_buscar_estoque.setSize(18)
-    texto_buscar_estoque.setStyle('bold')
-    texto_buscar_estoque.draw(win)
+    botao_buscar = Rectangle(Point(7.75, 2), Point(11.75, 3.2))
+    botao_buscar.setFill('grey')
+    botao_buscar.draw(win)
+    texto_buscar = Text(botao_buscar.getCenter(), 'Lista Pendencias')
+    texto_buscar.setSize(18)
+    texto_buscar.setStyle('bold')
+    texto_buscar.draw(win)
 
    # loop principal para interação
     while not win.isClosed():
@@ -718,8 +739,8 @@ def main(): # função principal de navegação
             y = click.getY()
             if 7.75 <= x <= 11.75 and 8 <= y <= 9.2: # verifica se o clique foi feito dentro do botão 'Verificar Estoque'
                 janela_verificar_estoque()
-            elif 7.75 <= x <= 11.75 and 6.5 <= y <= 7.7: # verifica se o clique foi feito dentro do botão 'Cadastrar Peça'
-                janela_cadastrar_peca()
+            elif 7.75 <= x <= 11.75 and 6.5 <= y <= 7.7: # verifica se o clique foi feito dentro do botão 'Cadastrar Item'
+                janela_cadastrar_item()
             elif 7.75 <= x <= 11.75 and 5 <= y <= 6.2: # verifica se o clique foi feito dentro do botão 'Gerar Lista'
                 gerar_lista()
             elif 7.75 <= x <= 11.75 and 3.5 <= y <= 4.7: # verifica se o clique foi feito dentro do botão 'Realizar Compra'

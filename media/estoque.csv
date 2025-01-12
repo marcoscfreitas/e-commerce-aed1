@@ -1,14 +1,9 @@
 ID,Nome,Valor,Quantidade
 1,CPU,120.0,4
-3,Mouse,30.0,10
+3,Mouse,30.0,9
 4,Teclado,50.0,15
 5,Processador,300.0,3
 6,Cooler,280.0,20
-7,Roteador,30.0,200,peça,12.0,12
-8,teste,123.0,12
-11,peça 2,1.0,0
-12,peça 1,1.0,0
-13,teste,1.0,1
-14,testando,120.23,0
-15,teste final talvez,120.12,0
-16,chega,125.4,11
+7,Caixa de Som,120.7,5
+8,Fone de Ouvido,180.9,20
+9,Adaptador Bluetooth,40.0,12
