@@ -15,11 +15,11 @@ def ler_estoque():  # função para ler e retornar o estoque do arquivo csv
         estoque.append(dados)
     return estoque
 
-def escrever_estoque(estoque): # função para escrever e atualizar dados no csv
+def atualizar_estoque(estoque): # função para escrever e atualizar dados no csv
     with open('./media/estoque.csv', mode='w', newline='') as arq: # newline para desabilitar quebra de linha ao manipular csv
-        arq = csv.writer(arq) # writer para escrever no arquivo
-        arq.writerow(['ID', 'Nome', 'Valor', 'Quantidade'])
-        arq.writerows(estoque) # atualiza estoque quando chamada a função
+        writer = csv.writer(arq) # writer para escrever no arquivo
+        writer.writerow(['ID', 'Nome', 'Valor', 'Quantidade'])
+        writer.writerows(estoque) # atualiza estoque quando chamada a função
 
 def adicionar_item(nome, valor, quantidade):  # função para adicionar um novo item ao estoque
     estoque = ler_estoque()
@@ -32,64 +32,10 @@ def adicionar_item(nome, valor, quantidade):  # função para adicionar um novo 
         novo_id = ultimo_id + 1
     # adiciona o novo item no csv
     with open('./media/estoque.csv', mode='a', newline='') as arq:
-        arq = csv.writer(arq)
-        arq.writerow([novo_id, nome, valor, quantidade])
+        writer = csv.writer(arq)
+        writer.writerow([novo_id, nome, valor, quantidade])
 
-# funções para design das janelas e interfaces
-
-def gerar_lista(): # função para gerar uma lista de itens em html para o usuário
-    estoque = ler_estoque()
-    file_path = 'generated_list/estoque.html'
-    with open(file_path, mode='w') as arq:
-        arq.write('''<html><head><title>Estoque</title>\n
-            <style>
-            body {
-                font-family: Arial, sans-serif;
-                background-color: #1a1a1a;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                height: 100vh;
-                margin: 0;
-            }
-            table {
-                width: 60%;
-                border-collapse: collapse;
-                margin-top: 20px;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-                border-radius: 8px;
-                overflow: hidden;
-            }
-            th, td {
-                color: white;
-                padding: 12px;
-                text-align: center;
-                border: 1px solid #ddd;
-            }
-            th {
-                background-color: #5bc0de;
-                font-size: 16px;
-            }
-            td {
-                font-size: 14px;
-            }
-            h1 {
-                color: white;
-                text-align: center;
-                font-size: 24px;
-                margin-bottom: 20px;
-            }
-        </style>\n
-        </head><body>\n
-        <h1>Estoque Atual</h1>\n
-        <table>\n<tr><th>ID</th><th>Nome</th><th>Valor</th><th>Quantidade</th></tr>\n''')
-
-        for item in estoque:
-            arq.write(f'<tr><td>{item[0]}</td><td>{item[1]}</td><td>R${float(item[2]):.2f}</td><td>{item[3]}</td></tr>\n')
-        arq.write('</table>\n</body></html>')
-
-    # webbrowser para abrir o arquivo html gerado no navegador
-    webbrowser.open(f'file://{os.path.abspath(file_path)}')
+# funções básicas
 
 def criar_janela(titulo, largura, altura): # função para criar uma nova janela secundaria
     win = GraphWin(titulo, largura, altura) # chama titulo largura e altura de acordo com o desejado de outras funções
@@ -102,6 +48,28 @@ def fechar_com_tecla(win): # função para fechar a janela ao pressionar Esc
         if key == 'Escape':
             win.close()
             return
+
+def exibir_mensagem(titulo, mensagem): # função para exibir avisos
+    win = criar_janela(titulo, 400, 200)
+
+    # texto da mensagem
+    texto = Text(Point(5, 6), mensagem)
+    texto.setSize(14)
+    texto.draw(win)
+
+    # botão ok
+    btn_ok = Rectangle(Point(4, 2), Point(6, 3))
+    btn_ok.setFill('yellow green')
+    btn_ok.draw(win)
+    Text(Point(5, 2.5), 'OK').draw(win)
+
+    while True:
+        click = win.checkMouse()
+        if click and 4 <= click.getX() <= 6 and 2 <= click.getY() <= 3: # verifica se o botão foi clicado
+            win.close()
+            return
+
+# funções funcionalidades
 
 def janela_verificar_estoque():  # função para visualizar o estoque disponível
     estoque = ler_estoque()
@@ -144,13 +112,11 @@ def janela_verificar_estoque():  # função para visualizar o estoque disponíve
             y -= 0.6
 
         # desenhar setinhas para paginação
-        if pagina > 0:
             botao_esquerda = Text(Point(1, 1.5), '<')
             botao_esquerda.setSize(32)
             botao_esquerda.setStyle('bold')
             botao_esquerda.draw(win)
 
-        if pagina < total_paginas - 1:
             botao_direita = Text(Point(9, 1.5), '>')
             botao_direita.setSize(32)
             botao_direita.setStyle('bold')
@@ -253,7 +219,6 @@ def janela_cadastrar_item(): # função para cadastrar um novo item
             if nome == '':
                 texto_erro.setText('O nome não pode ser vazio!') # verifica se o campo nome está vazio
                 continue
-
             try:
                 valor = float(valor)
                 if valor <= 0:
@@ -261,7 +226,6 @@ def janela_cadastrar_item(): # função para cadastrar um novo item
             except ValueError:
                 texto_erro.setText('Valor inválido! Use números positivos.') # verifica se o valor é um número positivo
                 continue
-
             try:
                 quantidade = int(qtd)
                 if quantidade <= 0:
@@ -278,6 +242,60 @@ def janela_cadastrar_item(): # função para cadastrar um novo item
             # exibe mensagem de sucesso
             exibir_mensagem('Sucesso','Item cadastrado com sucesso!')
             return
+
+def gerar_lista(): # função para gerar uma lista de itens em html para o usuário
+    estoque = ler_estoque()
+    file_path = 'generated_list/estoque.html'
+    with open(file_path, mode='w') as arq:
+        arq.write('''<html><head><title>Estoque</title>\n
+            <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #1a1a1a;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+            }
+            table {
+                width: 60%;
+                border-collapse: collapse;
+                margin-top: 20px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            th, td {
+                color: white;
+                padding: 12px;
+                text-align: center;
+                border: 1px solid #ddd;
+            }
+            th {
+                background-color: #5bc0de;
+                font-size: 16px;
+            }
+            td {
+                font-size: 14px;
+            }
+            h1 {
+                color: white;
+                text-align: center;
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
+        </style>\n
+        </head><body>\n
+        <h1>Estoque Atual</h1>\n
+        <table>\n<tr><th>ID</th><th>Nome</th><th>Valor</th><th>Quantidade</th></tr>\n''')
+
+        for item in estoque:
+            arq.write(f'<tr><td>{item[0]}</td><td>{item[1]}</td><td>R${float(item[2]):.2f}</td><td>{item[3]}</td></tr>\n')
+        arq.write('</table>\n</body></html>')
+
+    # webbrowser para abrir o arquivo html gerado no navegador
+    webbrowser.open(f'file://{os.path.abspath(file_path)}')
 
 def janela_realizar_compra():  # função para visualizar e realizar a compra de um item
     estoque = ler_estoque()
@@ -329,13 +347,11 @@ def janela_realizar_compra():  # função para visualizar e realizar a compra de
             y -= 0.6
 
         # desenhar botões de navegação
-        if pagina > 0:
             botao_esquerda = Text(Point(1, 1.5), '<')
             botao_esquerda.setSize(32)
             botao_esquerda.setStyle('bold')
             botao_esquerda.draw(win)
 
-        if pagina < total_paginas - 1:
             botao_direita = Text(Point(9, 1.5), '>')
             botao_direita.setSize(32)
             botao_direita.setStyle('bold')
@@ -414,7 +430,7 @@ def realizar_compra(item_id):  # Função para realizar a compra de um item
             break
 
     win = criar_janela('Quantidade', 400, 200)
-    Text(Point(5, 7), f'Comprar {item[1]} (Qtd disponível: {item[3]})').draw(win)
+    Text(Point(5, 7), f'Quantos(as) "{item[1]}" deseja comprar?\n(Qtd disponível: {item[3]})').draw(win)
     input_qtd = Entry(Point(5, 5), 10)
     input_qtd.draw(win)
 
@@ -439,22 +455,20 @@ def realizar_compra(item_id):  # Função para realizar a compra de um item
 
         # verificação de clique no botão 'finalizar'
         if click and 4 <= click.getX() <= 6 and 1.1 <= click.getY() <= 2.5:
-            quantidade_input = input_qtd.getText().strip()
+            quantidade = input_qtd.getText().strip()
 
             # verificação se o campo está vazio ou contém uma quantidade inválida
-            if not quantidade_input:
+            if not quantidade:
                 texto_erro.setText('O campo de quantidade não pode estar vazio!') # verifica se o campo de quantidade está vazio
                 continue
-
             try:
-                quantidade = int(quantidade_input)
+                quantidade = int(quantidade)
                 if quantidade <= 0:
                     texto_erro.setText('A quantidade deve ser maior que zero!') # verifica se a quantidade é maior que zero
                     continue
             except ValueError:
                 texto_erro.setText('A quantidade deve ser um número inteiro válido!') # verifica se a quantidade é um número inteiro
                 continue
-
             if quantidade > int(item[3]):
                 texto_erro.setText('Quantidade insuficiente para a compra!') # verifica se a quantidade é maior que a disponível
                 continue
@@ -462,7 +476,7 @@ def realizar_compra(item_id):  # Função para realizar a compra de um item
             # atualiza o estoque com a quantidade diminuída
             nova_qtd = int(item[3]) - quantidade
             item[3] = nova_qtd
-            escrever_estoque(estoque) # atualiza o estoque no csv
+            atualizar_estoque(estoque) # atualiza o estoque no csv
             win.close()
             exibir_mensagem('Sucesso', 'Compra realizada com sucesso!') # abre nova janela com mensagem de sucesso
             return
@@ -529,13 +543,11 @@ def lista_pendencias():
             y -= 0.6
 
         # desenhar botões de navegação
-        if pagina > 0:
             botao_esquerda = Text(Point(1, 1.5), '<')
             botao_esquerda.setSize(32)
             botao_esquerda.setStyle('bold')
             botao_esquerda.draw(win)
 
-        if pagina < total_paginas - 1:
             botao_direita = Text(Point(9, 1.5), '>')
             botao_direita.setSize(32)
             botao_direita.setStyle('bold')
@@ -621,15 +633,14 @@ def repor_item(item_id):  # função para repor a quantidade de um item
 
         # verificação de clique no botão 'finalizar'
         if click and 4 <= click.getX() <= 6 and 1.1 <= click.getY() <= 2.5:
-            quantidade_input = input_qtd.getText().strip()
+            quantidade = input_qtd.getText().strip()
 
             # verificação se o campo está vazio ou contém uma quantidade inválida
-            if not quantidade_input:
+            if not quantidade:
                 texto_erro.setText('O campo de quantidade não pode estar vazio!')  # verifica se o campo de quantidade está vazio
                 continue
-
             try:
-                quantidade = int(quantidade_input)
+                quantidade = int(quantidade)
                 if quantidade <= 0:
                     texto_erro.setText('A quantidade deve ser maior que zero!')  # verifica se a quantidade é maior que zero
                     continue
@@ -640,7 +651,7 @@ def repor_item(item_id):  # função para repor a quantidade de um item
             # atualiza o estoque com a quantidade reposta
             nova_qtd = int(item[3]) + quantidade
             item[3] = nova_qtd
-            escrever_estoque(estoque)  # atualiza o estoque no csv
+            atualizar_estoque(estoque)  # atualiza o estoque no csv
             win.close()
             exibir_mensagem('Sucesso', 'Quantidade reposta com sucesso!')  # abre nova janela com mensagem de sucesso
             return
@@ -653,29 +664,10 @@ def excluir_item(item_id):  # função para excluir um item do estoque
             estoque.remove(i)
             break
 
-    escrever_estoque(estoque)  # atualiza o estoque no csv
+    atualizar_estoque(estoque)  # atualiza o estoque no csv
     exibir_mensagem('Sucesso', 'Item excluído com sucesso!')  # abre nova janela com mensagem de sucesso
-    estoque = ler_estoque()
 
-def exibir_mensagem(titulo, mensagem): # função para exibir avisos
-    win = criar_janela(titulo, 400, 200)
-
-    # texto da mensagem
-    texto = Text(Point(5, 6), mensagem)
-    texto.setSize(14)
-    texto.draw(win)
-
-    # botão ok
-    btn_ok = Rectangle(Point(4, 2), Point(6, 3))
-    btn_ok.setFill('yellow green')
-    btn_ok.draw(win)
-    Text(Point(5, 2.5), 'OK').draw(win)
-
-    while True:
-        click = win.checkMouse()
-        if click and 4 <= click.getX() <= 6 and 2 <= click.getY() <= 3: # verifica se o botão foi clicado
-            win.close()
-            return
+# funçoes principais para navegação
 
 def main(): # função principal de navegação
     # criar janela principal maior

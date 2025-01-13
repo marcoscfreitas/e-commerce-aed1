@@ -1,9 +1,9 @@
 ID,Nome,Valor,Quantidade
-1,CPU,120.0,4
+1,CPU,120.0,5
 3,Mouse,30.0,9
 4,Teclado,50.0,15
 5,Processador,300.0,3
 6,Cooler,280.0,20
 7,Caixa de Som,120.7,5
-8,Fone de Ouvido,180.9,20
-9,Adaptador Bluetooth,40.0,12
+8,Fone de Ouvido,180.9,18
+9,Adaptador Bluetooth,40.0,10
