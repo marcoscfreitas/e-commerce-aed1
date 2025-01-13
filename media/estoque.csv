@@ -1,9 +1,12 @@
 ID,Nome,Valor,Quantidade
-1,CPU,120.0,5
-3,Mouse,30.0,9
-4,Teclado,50.0,15
-5,Processador,300.0,3
-6,Cooler,280.0,20
-7,Caixa de Som,120.7,5
-8,Fone de Ouvido,180.9,18
-9,Adaptador Bluetooth,40.0,10
+1,CPU,120.0,10
+2,Mouse,30.0,9
+3,Teclado,50.0,15
+4,Processador,300.0,5
+5,Cooler,280.0,10
+6,Caixa de Som,120.7,5
+7,Fone de Ouvido,180.9,18
+8,Adaptador Bluetooth,40.0,10
+9,Cabo HDMI,30.0,40
+10,Controle PS2,120.0,20
+11,Camera Digital,400.0,5

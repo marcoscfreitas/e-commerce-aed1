@@ -59,7 +59,7 @@ def exibir_mensagem(titulo, mensagem): # função para exibir avisos
 
     # botão ok
     btn_ok = Rectangle(Point(4, 2), Point(6, 3))
-    btn_ok.setFill('yellow green')
+    btn_ok.setFill('lawn green')
     btn_ok.draw(win)
     Text(Point(5, 2.5), 'OK').draw(win)
 
@@ -73,70 +73,72 @@ def exibir_mensagem(titulo, mensagem): # função para exibir avisos
 
 def janela_verificar_estoque():  # função para visualizar o estoque disponível
     estoque = ler_estoque()
-    itens_por_pagina = 10  # número maximo de itens na pagina
-    pagina_atual = 0  # índice da página atual e passado como "pagina" para a função desenhar_pagina
-    estoque_pesquisado = estoque[:]  # lista filtrada para pesquisa, inicialmente igual ao estoque completo
-    total_paginas = (len(estoque_pesquisado) - 1) // itens_por_pagina + 1  # cálculo do total de páginas para a paginação
+    estoque_pesquisado = estoque[:]  # lista de itens filtrados, inicialmente igual ao estoque completo
 
-    def desenhar_pagina(win, pagina): # função para atualizar a página com os itens do estoque após pesquisa
-        win.delete('all')  # limpa a janela para redesenhar
+    def desenhar_pagina(win, pagina):  # função para desenhar a página
+        win.delete('all')  # limpa a janela
 
-        # design do título
-        titulo = Text(Point(5, 9.5), 'Estoque Atual')
+        # título
+        titulo = Text(Point(5, 9.5), f'Estoque - Página {pagina}')
         titulo.setSize(20)
         titulo.setStyle('bold')
         titulo.draw(win)
 
         # desenhando retângulo para células do cabeçalho
         retangulo_header = Rectangle(Point(0, 8.2), Point(11, 9))
-        retangulo_header.setFill('lightblue')
+        retangulo_header.setFill('aqua')
         retangulo_header.draw(win)
 
-        # texto para cabeçalho
+        # cabeçalho
         Text(Point(1, 8.6), 'ID').draw(win)
         Text(Point(3.5, 8.6), 'Nome').draw(win)
         Text(Point(6, 8.6), 'Valor').draw(win)
         Text(Point(8.5, 8.6), 'Quantidade').draw(win)
 
-        # desenhar itens da página
-        inicio = pagina * itens_por_pagina
-        fim = inicio + itens_por_pagina
-        itens_pagina = estoque_pesquisado[inicio:fim]
-
+        # desenhar os itens com base na página
         y = 7.8
+
+        if pagina == 1:
+            itens_pagina = estoque_pesquisado[:10]  # primeiros 10 itens
+        else:
+            itens_pagina = estoque_pesquisado[10:20]  # itens 11 a 20
+
         for item in itens_pagina:
-            Text(Point(1, y - 0.05), item[0]).draw(win)  # id
-            Text(Point(3.5, y - 0.05), item[1]).draw(win)  # nome
-            Text(Point(6, y - 0.05), f'R${float(item[2]):.2f}').draw(win)  # valor formatado
-            Text(Point(8.5, y - 0.05), item[3]).draw(win)  # quantidade
+            Text(Point(1, y - 0.05), item[0]).draw(win)  # ID
+            Text(Point(3.5, y - 0.05), item[1]).draw(win)  # Nome
+            Text(Point(6, y - 0.05), f'R${float(item[2]):.2f}').draw(win)  # Valor
+            Text(Point(8.5, y - 0.05), item[3]).draw(win)  # Quantidade
             y -= 0.6
 
-        # desenhar setinhas para paginação
-            botao_esquerda = Text(Point(1, 1.5), '<')
-            botao_esquerda.setSize(32)
-            botao_esquerda.setStyle('bold')
-            botao_esquerda.draw(win)
+        # botões de navegação
+        if pagina == 2:  # botão para página anterior
+            botao_anterior = Rectangle(Point(1, 1.2), Point(1.5, 1.8))
+            botao_anterior.setFill('lightgray')
+            botao_anterior.draw(win)
+            Text(botao_anterior.getCenter(), '<').draw(win)
 
-            botao_direita = Text(Point(9, 1.5), '>')
-            botao_direita.setSize(32)
-            botao_direita.setStyle('bold')
-            botao_direita.draw(win)
+        if pagina == 1:  # botão para próxima página
+            botao_proxima = Rectangle(Point(8, 1.2), Point(8.5, 1.8))
+            botao_proxima.setFill('lightgray')
+            botao_proxima.draw(win)
+            Text(botao_proxima.getCenter(), '>').draw(win)
 
-        # input para pesquisar string
+        # campo de pesquisa
         Text(Point(3.3, 1.5), 'Pesquisar:').draw(win)
         input_pesquisa = Entry(Point(5, 1.5), 20)
         input_pesquisa.draw(win)
 
-        # botao para realizar a pesquisa
+        # botão para realizar a pesquisa
         botao_pesquisar = Rectangle(Point(6.2, 1.3), Point(6.7, 1.7))
-        botao_pesquisar.setFill('yellow green')
+        botao_pesquisar.setFill('lawn green')
         botao_pesquisar.draw(win)
         Text(botao_pesquisar.getCenter(), '🔎').draw(win)
 
         return input_pesquisa
 
+    # cria a janela
     win = criar_janela('Verificar Estoque', 800, 600)
-    input_pesquisa = desenhar_pagina(win, pagina_atual)
+    input_pesquisa = desenhar_pagina(win, 1)  # inicia na página 1
 
     while True:
         click = win.checkMouse()
@@ -146,28 +148,25 @@ def janela_verificar_estoque():  # função para visualizar o estoque disponíve
             win.close()
             return
 
-        if click:  # se um click ocorrer, obter coordenadas x e y
+        if click:  # verifica cliques para navegação ou pesquisa
             x, y = click.getX(), click.getY()
 
-            # se determinadas coordenadas forem clicadas, realizará navegação entre páginas
-            if 0.5 <= x <= 1.5 and 1.2 <= y <= 1.8 and pagina_atual > 0:  # Área ajustada para a seta esquerda
-                pagina_atual -= 1
-                input_pesquisa = desenhar_pagina(win, pagina_atual)
-            elif 8.5 <= x <= 9.5 and 1.2 <= y <= 1.8 and pagina_atual < total_paginas - 1:  # Área ajustada para a seta direita
-                pagina_atual += 1
-                input_pesquisa = desenhar_pagina(win, pagina_atual)
+            # navega para a página 1 (anterior)
+            if 1 <= x <= 2 and 1.2 <= y <= 1.8:
+                input_pesquisa = desenhar_pagina(win, 1)
 
-            # se clicar no botão de pesquisa, filtrar os itens com base no texto digitado
+            # navega para a página 2 (próxima)
+            elif 8 <= x <= 9 and 1.2 <= y <= 1.8:
+                input_pesquisa = desenhar_pagina(win, 2)
+
+            # realiza a pesquisa ao clicar no botão de pesquisa
             elif 6.2 <= x <= 6.7 and 1.3 <= y <= 1.7:
-                texto_pesquisa = input_pesquisa.getText().strip().lower()  # pega o texto digitado no campo de pesquisa e remove espaços e transforma em minúsculo
-                estoque_pesquisado = []  # cria uma nova lista com os itens que contém o texto pesquisado
-                for item in estoque: # for para percorrer o estoque e encontrar o item com a string pesquisada
-                    if texto_pesquisa in item[1].lower():  # verifica se o texto está no nome do item
-                        estoque_pesquisado.append(item)
-                pagina_atual = 0  # reinicia a página para a primeira página
-
-                total_paginas = (len(estoque_pesquisado) - 1) // itens_por_pagina + 1  # recalcula o total de páginas com base no filtro
-                input_pesquisa = desenhar_pagina(win, pagina_atual)  # redesenha a página com o filtro
+                texto_pesquisa = input_pesquisa.getText().strip().lower()  # texto do campo de pesquisa
+                estoque_pesquisado = []  # cria uma lista vazia para armazenar os itens filtrados
+                for item in estoque:  # percorre cada item no estoque
+                    if texto_pesquisa in item[1].lower():  # verifica se o texto pesquisado está no nome do item
+                        estoque_pesquisado.append(item)  # adiciona o item à lista filtrada
+                input_pesquisa = desenhar_pagina(win, 1)  # reinicia para a página 1
 
 def janela_cadastrar_item(): # função para cadastrar um novo item
     win = criar_janela('Cadastrar Item', 400, 300)
@@ -193,7 +192,7 @@ def janela_cadastrar_item(): # função para cadastrar um novo item
 
     # botão enviar
     button_enviar = Rectangle(Point(4, 1.7), Point(6, 2.7))
-    button_enviar.setFill('yellow green')
+    button_enviar.setFill('lawn green')
     button_enviar.draw(win)
     Text(Point(5, 2.2), 'Enviar').draw(win)
 
@@ -287,7 +286,7 @@ def gerar_lista(): # função para gerar uma lista de itens em html para o usuá
             }
         </style>\n
         </head><body>\n
-        <h1>Estoque Atual</h1>\n
+        <h1>Estoque</h1>\n
         <table>\n<tr><th>ID</th><th>Nome</th><th>Valor</th><th>Quantidade</th></tr>\n''')
 
         for item in estoque:
@@ -299,23 +298,20 @@ def gerar_lista(): # função para gerar uma lista de itens em html para o usuá
 
 def janela_realizar_compra():  # função para visualizar e realizar a compra de um item
     estoque = ler_estoque()
-    itens_por_pagina = 10  # número de itens que cabem em uma página
-    pagina_atual = 0  # índice da página atual
-    estoque_pesquisado = estoque[:]  # lista filtrada, inicialmente igual ao estoque
-    total_paginas = (len(estoque_pesquisado) - 1) // itens_por_pagina + 1  # cálculo do total de páginas
+    estoque_pesquisado = estoque[:]  # lista filtrada, inicialmente igual ao estoque completo
 
-    def desenhar_pagina(win, pagina):
+    def desenhar_pagina(win, pagina):  # função para desenhar a página
         win.delete('all')
 
         # design do título
-        titulo = Text(Point(5, 9.5), 'Realizar Compra')
+        titulo = Text(Point(5, 9.5), f'Comprar - Página {pagina}')
         titulo.setSize(20)
         titulo.setStyle('bold')
         titulo.draw(win)
 
         # desenhando retângulo para células do cabeçalho
         retangulo_header = Rectangle(Point(0, 8.2), Point(11, 9))
-        retangulo_header.setFill('lightblue')
+        retangulo_header.setFill('aqua')
         retangulo_header.draw(win)
 
         # desenhando cabeçalho
@@ -325,12 +321,14 @@ def janela_realizar_compra():  # função para visualizar e realizar a compra de
         Text(Point(6.8, 8.6), 'Quantidade').draw(win)
 
         # desenha os itens da página atual
-        inicio = pagina * itens_por_pagina
-        fim = inicio + itens_por_pagina
-        itens_pagina = estoque_pesquisado[inicio:fim]
-
         y = 7.8
         botoes_compra = []
+
+        if pagina == 1:
+            itens_pagina = estoque_pesquisado[:10]  # primeiros 10 itens
+        else:
+            itens_pagina = estoque_pesquisado[10:20]  # itens 11 a 20
+
         for item in itens_pagina:
             Text(Point(1, y - 0.05), item[0]).draw(win)  # id
             Text(Point(2.5, y - 0.05), item[1]).draw(win)  # nome
@@ -339,23 +337,25 @@ def janela_realizar_compra():  # função para visualizar e realizar a compra de
 
             # botão de compra
             botao_comprar = Rectangle(Point(8.2, y - 0.25), Point(9.3, y + 0.25))
-            botao_comprar.setFill('yellow green')
+            botao_comprar.setFill('lawn green')
             botao_comprar.draw(win)
             Text(Point(8.75, y), 'Comprar').draw(win)
             botoes_compra.append([botao_comprar, item[0]])  # adiciona o botão e o id do item à lista de botões
-            #print(botoes_compra)
+
             y -= 0.6
 
         # desenhar botões de navegação
-            botao_esquerda = Text(Point(1, 1.5), '<')
-            botao_esquerda.setSize(32)
-            botao_esquerda.setStyle('bold')
-            botao_esquerda.draw(win)
+        if pagina == 2:  # botão para página anterior
+            botao_anterior = Rectangle(Point(1, 1.2), Point(1.5, 1.8))
+            botao_anterior.setFill('lightgray')
+            botao_anterior.draw(win)
+            Text(botao_anterior.getCenter(), '<').draw(win)
 
-            botao_direita = Text(Point(9, 1.5), '>')
-            botao_direita.setSize(32)
-            botao_direita.setStyle('bold')
-            botao_direita.draw(win)
+        if pagina == 1:  # botão para próxima página
+            botao_proxima = Rectangle(Point(8, 1.2), Point(8.5, 1.8))
+            botao_proxima.setFill('lightgray')
+            botao_proxima.draw(win)
+            Text(botao_proxima.getCenter(), '>').draw(win)
 
         # Campo de pesquisa
         Text(Point(3.3, 1.5), 'Pesquisar:').draw(win)
@@ -364,57 +364,47 @@ def janela_realizar_compra():  # função para visualizar e realizar a compra de
 
         # Botão de pesquisa
         botao_pesquisar = Rectangle(Point(6.2, 1.3), Point(6.7, 1.7))
-        botao_pesquisar.setFill('yellow green')
+        botao_pesquisar.setFill('lawn green')
         botao_pesquisar.draw(win)
         Text(botao_pesquisar.getCenter(), '🔎').draw(win)
 
         return botoes_compra, input_pesquisa
 
+    # cria a janela
     win = criar_janela('Realizar Compra', 800, 600)
-    retorno = desenhar_pagina(win, pagina_atual) # atribui os botões de compra e o campo de pesquisa à variável botoes_compra e input_pesquisa
-    botoes_compra = retorno[0]
-    input_pesquisa = retorno[1]
+    botoes_compra, input_pesquisa = desenhar_pagina(win, 1)  # inicializa na página 1
 
     while True:
         click = win.checkMouse()
         key = win.checkKey()
-        if key == 'Escape':
+
+        if key == 'Escape':  # fecha a janela ao pressionar esc
             win.close()
             return
 
-        if click:
+        if click:  # verifica cliques para navegação ou ações
             x, y = click.getX(), click.getY()
 
-            # caso clique nas setas de navegação atualiza a página atual e redesenha a página
-            if 0.5 <= x <= 1.5 and 1.2 <= y <= 1.8 and pagina_atual > 0:  # Área ajustada para a seta esquerda
-                pagina_atual -= 1
-                retorno = desenhar_pagina(win, pagina_atual)
-                botoes_compra = retorno[0]
-                input_pesquisa = retorno[1]
-            elif 8.5 <= x <= 9.5 and 1.2 <= y <= 1.8 and pagina_atual < total_paginas - 1:  # Área ajustada para a seta direita
-                pagina_atual += 1
-                retorno = desenhar_pagina(win, pagina_atual)
-                botoes_compra = retorno[0]
-                input_pesquisa = retorno[1]
+            # botão para página 1 (anterior)
+            if 1 <= x <= 2 and 1.2 <= y <= 1.8:
+                botoes_compra, input_pesquisa = desenhar_pagina(win, 1)
 
-            # caso clique no botão de pesquisa, filtra os itens com base no texto digitado
+            # botão para página 2 (próxima)
+            elif 8 <= x <= 9 and 1.2 <= y <= 1.8:
+                botoes_compra, input_pesquisa = desenhar_pagina(win, 2)
+
+            # botão de pesquisa
             elif 6.2 <= x <= 6.7 and 1.3 <= y <= 1.7:
                 texto_pesquisa = input_pesquisa.getText().strip().lower()
                 estoque_pesquisado = []
                 for item in estoque:
                     if texto_pesquisa in item[1].lower():
                         estoque_pesquisado.append(item)
-                pagina_atual = 0
+                botoes_compra, input_pesquisa = desenhar_pagina(win, 1)  # volta para a página 1
 
-                total_paginas = (len(estoque_pesquisado) - 1) // itens_por_pagina + 1
-                retorno = desenhar_pagina(win, pagina_atual)
-                botoes_compra = retorno[0]
-                input_pesquisa = retorno[1]
-
-            # caso clique no botão de compra, realiza a compra do item
+            # botão de compra
             for botao in botoes_compra:
-                botao_comprar = botao[0]
-                item_id = botao[1]
+                botao_comprar, item_id = botao
                 if botao_comprar.getP1().getX() <= x <= botao_comprar.getP2().getX() and botao_comprar.getP1().getY() <= y <= botao_comprar.getP2().getY():
                     win.close()
                     realizar_compra(item_id)
@@ -436,7 +426,7 @@ def realizar_compra(item_id):  # Função para realizar a compra de um item
 
     # botão finalizar
     botao_finalizar = Rectangle(Point(4, 1.1), Point(6, 2.5))
-    botao_finalizar.setFill('yellow green')
+    botao_finalizar.setFill('lawn green')
     botao_finalizar.draw(win)
     Text(Point(5, 1.8), 'Finalizar').draw(win)
 
@@ -489,76 +479,50 @@ def lista_pendencias():
         if int(item[3]) == 0:
             pendencias.append(item)
 
-    itens_por_pagina = 10
-    pagina_atual = 0
-    total_paginas = (len(pendencias) - 1) // itens_por_pagina + 1
-
-    def desenhar_pagina(win, pagina):
-        win.delete('all')
-
-        # design do título
-        titulo = Text(Point(5, 9.5), 'Itens Esgotados')
-        titulo.setSize(20)
-        titulo.setStyle('bold')
-        titulo.draw(win)
-
-        # desenhando retângulo para células do cabeçalho
-        retangulo_header = Rectangle(Point(0, 8.2), Point(11, 9))  # ID
-        retangulo_header.setFill('lightblue')
-        retangulo_header.draw(win)
-
-        # cabeçalho
-        Text(Point(1, 8.6), 'ID').draw(win)
-        Text(Point(2.5, 8.6), 'Nome').draw(win)
-        Text(Point(4.5, 8.6), 'Valor').draw(win)
-        Text(Point(6.8, 8.6), 'Quantidade').draw(win)
-
-        inicio = pagina * itens_por_pagina
-        fim = inicio + itens_por_pagina
-        itens_pagina = pendencias[inicio:fim]
-
-        y = 7.8
-        botoes_repor = []
-        botoes_excluir = []
-        for item in itens_pagina:
-            Text(Point(1, y), item[0]).draw(win)
-            Text(Point(2.5, y), item[1]).draw(win)
-            Text(Point(4.5, y), f'R${float(item[2]):.2f}').draw(win)
-            Text(Point(6.8, y), item[3]).draw(win)
-
-            # botão de "Repor"
-            botao_repor = Rectangle(Point(8.1, y - 0.25), Point(8.7, y + 0.25))
-            botao_repor.setFill('yellow green')
-            botao_repor.draw(win)
-            Text(Point(8.4, y), 'Repor').draw(win)
-            botoes_repor.append([botao_repor, item[0]])
-
-            # botão de "Excluir"
-            botao_excluir = Rectangle(Point(8.8, y - 0.25), Point(9.4, y + 0.25))
-            botao_excluir.setFill('red')
-            botao_excluir.draw(win)
-            Text(Point(9.1, y), 'Excluir').draw(win)
-            botoes_excluir.append([botao_excluir, item[0]])
-
-            y -= 0.6
-
-        # desenhar botões de navegação
-            botao_esquerda = Text(Point(1, 1.5), '<')
-            botao_esquerda.setSize(32)
-            botao_esquerda.setStyle('bold')
-            botao_esquerda.draw(win)
-
-            botao_direita = Text(Point(9, 1.5), '>')
-            botao_direita.setSize(32)
-            botao_direita.setStyle('bold')
-            botao_direita.draw(win)
-
-        return botoes_repor, botoes_excluir
-
     win = criar_janela('Lista de Pendências', 800, 600)
-    retorno = desenhar_pagina(win, pagina_atual)
-    botoes_repor = retorno[0]
-    botoes_excluir = retorno[1]
+    win.delete('all')
+
+    # design do título
+    titulo = Text(Point(5, 9.5), 'Itens Esgotados')
+    titulo.setSize(20)
+    titulo.setStyle('bold')
+    titulo.draw(win)
+
+    # desenhando retângulo para células do cabeçalho
+    retangulo_header = Rectangle(Point(0, 8.2), Point(11, 9))
+    retangulo_header.setFill('aqua')
+    retangulo_header.draw(win)
+
+    # cabeçalho
+    Text(Point(1, 8.6), 'ID').draw(win)
+    Text(Point(2.5, 8.6), 'Nome').draw(win)
+    Text(Point(4.5, 8.6), 'Valor').draw(win)
+    Text(Point(6.8, 8.6), 'Quantidade').draw(win)
+
+    y = 7.8
+    botoes_repor = []
+    botoes_excluir = []
+    for item in pendencias:
+        Text(Point(1, y), item[0]).draw(win)
+        Text(Point(2.5, y), item[1]).draw(win)
+        Text(Point(4.5, y), f'R${float(item[2]):.2f}').draw(win)
+        Text(Point(6.8, y), item[3]).draw(win)
+
+        # botão de "Repor"
+        botao_repor = Rectangle(Point(8.1, y - 0.25), Point(8.7, y + 0.25))
+        botao_repor.setFill('lawn green')
+        botao_repor.draw(win)
+        Text(Point(8.4, y), 'Repor').draw(win)
+        botoes_repor.append([botao_repor, item[0]])
+
+        # botão de "Excluir"
+        botao_excluir = Rectangle(Point(8.8, y - 0.25), Point(9.4, y + 0.25))
+        botao_excluir.setFill('red')
+        botao_excluir.draw(win)
+        Text(Point(9.1, y), 'Excluir').draw(win)
+        botoes_excluir.append([botao_excluir, item[0]])
+
+        y -= 0.6
 
     while True:
         click = win.checkMouse()
@@ -571,21 +535,9 @@ def lista_pendencias():
         if click:
             x, y = click.getX(), click.getY()
 
-            # caso clique nas setas de navegação atualiza a página atual e redesenha a página
-            if 0.5 <= x <= 1.5 and 0.2 <= y <= 0.6 and pagina_atual > 0:
-                pagina_atual -= 1
-                retorno = desenhar_pagina(win, pagina_atual)
-                botoes_repor = retorno[0]
-                botoes_excluir = retorno[1]
-            elif 8.5 <= x <= 9.5 and 0.2 <= y <= 0.6 and pagina_atual < total_paginas - 1:
-                pagina_atual += 1
-                retorno = desenhar_pagina(win, pagina_atual)
-                botoes_repor = retorno[0]
-                botoes_excluir = retorno[1]
-
             # atribui o id do item ao botão de repor e caso seja clicado, chama a função repor_item
             for botao_repor in botoes_repor:
-                item_id = botao_repor[1]  # guarda o id do item correspondente ao botão de repor
+                item_id = botao_repor[1]
                 if botao_repor[0].getP1().getX() <= x <= botao_repor[0].getP2().getX() and botao_repor[0].getP1().getY() <= y <= botao_repor[0].getP2().getY():
                     win.close()
                     repor_item(item_id)
@@ -593,7 +545,7 @@ def lista_pendencias():
 
             # atribui o id do item ao botão de excluir e caso seja clicado, chama a função excluir_item
             for botao_excluir in botoes_excluir:
-                item_id = botao_excluir[1]  # guarda o id do item correspondente ao botão de excluir
+                item_id = botao_excluir[1]
                 if botao_excluir[0].getP1().getX() <= x <= botao_excluir[0].getP2().getX() and botao_excluir[0].getP1().getY() <= y <= botao_excluir[0].getP2().getY():
                     win.close()
                     excluir_item(item_id)
@@ -614,7 +566,7 @@ def repor_item(item_id):  # função para repor a quantidade de um item
 
     # botão finalizar
     botao_finalizar = Rectangle(Point(4, 1.1), Point(6, 2.5))
-    botao_finalizar.setFill('yellow green')
+    botao_finalizar.setFill('lawn green')
     botao_finalizar.draw(win)
     Text(Point(5, 1.8), 'Finalizar').draw(win)
 
