@@ -42,13 +42,6 @@ def criar_janela(titulo, largura, altura): # função para criar uma nova janela
     win.setCoords(0, 0, 10, 10)
     return win
 
-def fechar_com_tecla(win): # função para fechar a janela ao pressionar Esc
-    while True:
-        key = win.checkKey()
-        if key == 'Escape':
-            win.close()
-            return
-
 def exibir_mensagem(titulo, mensagem): # função para exibir avisos
     win = criar_janela(titulo, 400, 200)
 
