@@ -23,6 +23,12 @@ def atualizar_estoque(estoque): # função para escrever e atualizar dados no cs
 
 def adicionar_item(nome, valor, quantidade):  # função para adicionar um novo item ao estoque
     estoque = ler_estoque()
+
+    # for para percorrer o estoque e ver se o item já existe
+    for item in estoque:
+        if item[1].lower() == nome.lower():  # compara o nome sem diferenciar maiúsculas e minúsculas
+            return 'Item já existe no estoque!'  # retorna uma mensagem indicando que o item já está cadastrado
+
     # gerar novo id para o item adicionado
     if len(estoque) == 0:  # se estiver vazio id será 1
         novo_id = 1
@@ -30,10 +36,12 @@ def adicionar_item(nome, valor, quantidade):  # função para adicionar um novo 
         ultimo_item = estoque[-1]
         ultimo_id = int(ultimo_item[0])
         novo_id = ultimo_id + 1
+
     # adiciona o novo item no csv
     with open('./media/estoque.csv', mode='a', newline='') as arq:
         writer = csv.writer(arq)
         writer.writerow([novo_id, nome, valor, quantidade])
+    return None  # se o item foi adicionado com sucesso, retorna None
 
 # funções básicas
 
@@ -161,7 +169,7 @@ def janela_verificar_estoque():  # função para visualizar o estoque disponíve
                         estoque_pesquisado.append(item)  # adiciona o item à lista filtrada
                 input_pesquisa = desenhar_pagina(win, 1)  # reinicia para a página 1
 
-def janela_cadastrar_item(): # função para cadastrar um novo item
+def janela_cadastrar_item():  # função para cadastrar um novo item
     win = criar_janela('Cadastrar Item', 400, 300)
 
     # design do título
@@ -190,7 +198,7 @@ def janela_cadastrar_item(): # função para cadastrar um novo item
     Text(Point(5, 2.2), 'Enviar').draw(win)
 
     # mensagem de erro
-    texto_erro = Text(Point(5, 3.5), '') # inicialmente vazio e usado para exibir mensagens de erro
+    texto_erro = Text(Point(5, 3.5), '')  # inicialmente vazio e usado para exibir mensagens de erro
     texto_erro.setFill('red')
     texto_erro.setSize(12)
     texto_erro.draw(win)
@@ -209,30 +217,34 @@ def janela_cadastrar_item(): # função para cadastrar um novo item
             qtd = input_qtd.getText().strip()
 
             if nome == '':
-                texto_erro.setText('O nome não pode ser vazio!') # verifica se o campo nome está vazio
+                texto_erro.setText('O nome não pode ser vazio!')  # verifica se o campo nome está vazio
                 continue
             try:
                 valor = float(valor)
                 if valor <= 0:
                     raise ValueError
             except ValueError:
-                texto_erro.setText('Valor inválido! Use números positivos.') # verifica se o valor é um número positivo
+                texto_erro.setText('Valor inválido! Use números positivos.')  # verifica se o valor é um número positivo
                 continue
             try:
                 quantidade = int(qtd)
                 if quantidade <= 0:
                     raise ValueError
             except ValueError:
-                texto_erro.setText('Quantidade inválida! Use números inteiros.') # verifica se a quantidade é um número inteiro
+                texto_erro.setText('Quantidade inválida! Use números inteiros.')  # verifica se a quantidade é um número inteiro
                 continue
 
-            # adiciona o item ao estoque caso nao haja erros
-            adicionar_item(nome, valor, quantidade)
+            # tenta adicionar o item ao estoque
+            erro = adicionar_item(nome, valor, quantidade)
+            if erro:  # caso a função retornar uma mensagem de erro (item já existe)
+                texto_erro.setText(erro)
+                continue
+
             texto_erro.setText('')  # limpa mensagem de erro antes de fechar a janela
             win.close()
 
             # exibe mensagem de sucesso
-            exibir_mensagem('Sucesso','Item cadastrado com sucesso!')
+            exibir_mensagem('Sucesso', 'Item cadastrado com sucesso!')
             return
 
 def gerar_lista(): # função para gerar uma lista de itens em html para o usuário
